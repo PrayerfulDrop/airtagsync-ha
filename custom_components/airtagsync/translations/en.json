@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "AirTagSync — connect to your Mac",
+        "description": "AirTagSync reads the FindMy cache from your Mac over SSH and creates AirTag device trackers in Home Assistant.\n\nBefore you continue, make sure:\n• Remote Login is enabled on the Mac (System Settings → General → Sharing → Remote Login)\n• You've added the integration's public SSH key to the Mac's `~/.ssh/authorized_keys`\n• You've extracted `FMIPDataManager.bplist` from the Mac and have it ready to paste\n\nSee the README for the full extractor walkthrough.",
+        "data": {
+          "host": "Mac hostname or IP",
+          "port": "SSH port",
+          "username": "Mac username",
+          "private_key": "SSH private key (PEM)",
+          "fmip_key_b64_or_bplist": "FMIPDataManager.bplist (base64) OR raw 32-byte FMIP key (base64)",
+          "latitude": "Home latitude",
+          "longitude": "Home longitude",
+          "radius_m": "Home radius (meters)",
+          "scan_interval_s": "Poll interval (seconds)",
+          "include_audio_accessories": "Include AirPods / audio accessories"
+        }
+      }
+    },
+    "error": {
+      "ssh_auth_failed": "SSH auth refused — the private key isn't accepted by the Mac. Make sure the matching public key is in `~/.ssh/authorized_keys`.",
+      "ssh_connect_failed": "Couldn't reach the Mac on SSH. Check host/IP, port, and that Remote Login is enabled.",
+      "invalid_fmip_key": "Couldn't parse the FMIP key. Paste either the entire `FMIPDataManager.bplist` (base64) or the raw 32-byte symmetric key (base64).",
+      "decrypt_failed": "Found the file but couldn't decrypt it with that key. Likely wrong FMIP key — re-run the extractor."
+    },
+    "abort": {
+      "already_configured": "This Mac is already configured."
+    }
+  }
+}

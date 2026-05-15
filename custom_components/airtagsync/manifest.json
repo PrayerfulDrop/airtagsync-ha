@@ -1,0 +1,13 @@
+{
+  "domain": "airtagsync",
+  "name": "AirTagSync",
+  "version": "0.1.0",
+  "codeowners": ["@PrayerfulDrop"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/PrayerfulDrop/airtagsync-ha",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/PrayerfulDrop/airtagsync-ha/issues",
+  "requirements": ["asyncssh>=2.14.0", "cryptography>=42"],
+  "integration_type": "service"
+}
