@@ -62,58 +62,27 @@ Restart HA → Settings → Devices & Services → Add Integration → AirTagSyn
 
 ## One-time Mac setup
 
-### 1. Extract the FMIP key
+The Mac side takes about 30 minutes the first time and involves disabling
+some macOS security features so a debugger can pull the AirTag decryption
+keys out of FindMy.app's memory. **Both can be re-enabled afterward** — the
+integration only needs the extracted key, not the relaxed state.
 
-This uses [findmy-key-extractor](https://github.com/PrayerfulDrop/findmy-key-extractor) — a fork with Intel + Apple Silicon support. (Upstream PR: [manonstreet/findmy-key-extractor#4](https://github.com/manonstreet/findmy-key-extractor/pull/4).)
+➡ **Full Mac setup walkthrough: [`docs/mac-setup.md`](docs/mac-setup.md)**
 
-```bash
-git clone https://github.com/PrayerfulDrop/findmy-key-extractor.git ~/src/findmy-key-extractor
-cd ~/src/findmy-key-extractor
-./extract.sh
-```
+The walkthrough covers, in order:
 
-When it finishes, you'll have three files in `keys/`. The one AirTagSync needs is `FMIPDataManager.bplist` (171 bytes). You'll paste its base64 form into the HA config flow.
+1. Disabling SIP (Recovery Mode)
+2. Setting `amfi_get_out_of_my_way=0x1` in NVRAM
+3. Granting Full Disk Access to Terminal
+4. Running the key extractor
+5. Converting `FMIPDataManager.bplist` to base64
+6. Generating a restricted SSH key for the HA integration
+7. Enabling Remote Login
+8. Installing a tiny launch plist that keeps FindMy.app open
+9. (Optional) Re-enabling SIP and clearing the boot-arg once the keys are extracted
 
-```bash
-base64 -i ~/src/findmy-key-extractor/keys/FMIPDataManager.bplist | pbcopy
-# the bplist is now on your clipboard, ready to paste into HA
-```
-
-⚠️ **Anyone with this file can read your AirTag locations.** Treat it like a password.
-
-### 2. Enable Remote Login
-
-System Settings → General → Sharing → Remote Login → On. Restrict to a single user (your Mac account) for tightness.
-
-### 3. Add the integration's SSH key
-
-The integration generates a keypair for you at config-flow time, but if you'd rather install one ahead of time you can. The pattern that ships with this repo is a restricted line:
-
-```
-command="if [ \"$SSH_ORIGINAL_COMMAND\" = \"cat ~/Library/Caches/com.apple.findmy.fmipcore/Items.data\" ]; then eval \"$SSH_ORIGINAL_COMMAND\"; else echo refused; exit 1; fi",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ssh-ed25519 AAAA…
-```
-
-This way, even if the private key leaks, the only command anyone can run with it is `cat Items.data`. They cannot get a shell, forward ports, or read any other file.
-
-### 4. Keep FindMy.app running
-
-`Items.data` only refreshes while FindMy.app is open. Drop this LaunchAgent in `~/Library/LaunchAgents/com.user.findmy-keepalive.plist` (no Python, no service code):
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-  <key>Label</key><string>com.user.findmy-keepalive</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>/usr/bin/open</string><string>-gj</string><string>/System/Applications/FindMy.app</string>
-  </array>
-  <key>RunAtLoad</key><true/>
-  <key>StartInterval</key><integer>600</integer>
-</dict></plist>
-```
-
-Then `launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.user.findmy-keepalive.plist`. FindMy.app will be re-launched every 10 minutes if it ever quits.
+Read it through once before starting. Every change it asks you to make is
+reversible.
 
 ## Configuring
 
